@@ -3,155 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bus Routen - PC</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-
-        h1, h2 {
-            color: #4CAF50;
-        }
-
-        form {
-            margin: 20px 0;
-        }
-
-        label {
-            font-weight: bold;
-        }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        #routesList {
-            margin-top: 20px;
-        }
-
-        .routeItem {
-            background-color: #f1f1f1;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-
-        .routeItem:hover {
-            background-color: #e0e0e0;
-        }
-    </style>
+    <title>Routen erstellen</title>
 </head>
 <body>
-    <h1>Erstelle eine Busroute</h1>
-    <form id="routeForm">
-        <label for="routeName">Linienname:</label>
-        <input type="text" id="routeName" required><br><br>
+    <h1>Routen erstellen und auswählen</h1>
 
-        <label for="routeNumber">Liniennummer:</label>
-        <input type="text" id="routeNumber" required><br><br>
+    <div id="route-list">
+        <h2>Erstellte Routen</h2>
+        <ul id="route-ul">
+            <!-- Dynamisch generierte Routen werden hier eingefügt -->
+        </ul>
+    </div>
 
-        <label for="stops">Haltestellen (kommagetrennt):</label>
-        <input type="text" id="stops" required><br><br>
+    <div id="create-route">
+        <h2>Neue Route erstellen</h2>
+        <label for="route-name">Routenname:</label>
+        <input type="text" id="route-name" placeholder="Routenname" required>
+        <br>
+        <label for="route-stops">Haltestellen (Komma getrennt):</label>
+        <input type="text" id="route-stops" placeholder="Haltestellen" required>
+        <br>
+        <button id="create-button">Route erstellen</button>
+    </div>
 
-        <button type="submit">Route erstellen</button>
-    </form>
-
-    <h2>Erstellte Routen:</h2>
-    <div id="routesList"></div>
+    <button id="start-ride" style="display: none;">Jetzt fahren</button>
 
     <script>
-        const repoName = 'bus21-1'; // PC Repo Name
-        const token = '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'; // Dein GitHub PAT
-        const user = 'MGETZ-io'; // Dein GitHub Username
+        // JSON-Datei, die die Routen speichert
+        const routesJsonPath = 'routes.json';
+        let routes = [];
 
-        const apiUrl = `https://api.github.com/repos/${user}/${repoName}/contents/routes.json`;
-
-        document.getElementById('routeForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const routeName = document.getElementById('routeName').value;
-            const routeNumber = document.getElementById('routeNumber').value;
-            const stops = document.getElementById('stops').value.split(',');
-
-            const routeData = {
-                name: routeName,
-                number: routeNumber,
-                stops: stops
-            };
-
-            fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3.raw'
-                }
-            })
+        // Lade die gespeicherten Routen
+        fetch(routesJsonPath)
             .then(response => response.json())
             .then(data => {
-                let routes = data.content ? JSON.parse(atob(data.content)) : [];
-
-                routes.push(routeData);
-
-                fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Route hinzufügen',
-                        committer: {
-                            name: 'MGETZ-io',
-                            email: 'deine-email@example.com'
-                        },
-                        content: btoa(JSON.stringify(routes))
-                    })
-                })
-                .then(() => {
-                    alert('Route erfolgreich erstellt!');
-                    loadRoutes();
-                })
-                .catch(error => console.error('Fehler beim Speichern der Route:', error));
+                routes = data;
+                displayRoutes();
             });
-        });
 
-        function loadRoutes() {
-            fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3.raw'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                let routes = data.content ? JSON.parse(atob(data.content)) : [];
-                const routesList = document.getElementById('routesList');
-                routesList.innerHTML = '';
+        // Routen anzeigen
+        function displayRoutes() {
+            const routeUl = document.getElementById('route-ul');
+            routeUl.innerHTML = '';
 
-                routes.forEach(route => {
-                    const routeItem = document.createElement('div');
-                    routeItem.classList.add('routeItem');
-                    routeItem.innerHTML = `
-                        <strong>Linie ${route.number} - ${route.name}</strong>
-                        <p>Haltestellen: ${route.stops.join(', ')}</p>
-                    `;
-                    routesList.appendChild(routeItem);
-                });
-            })
-            .catch(error => console.error('Fehler beim Laden der Routen:', error));
+            routes.forEach((route, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${route.name} - Haltestellen: ${route.stops.join(', ')}`;
+                li.addEventListener('click', () => selectRoute(index));
+                routeUl.appendChild(li);
+            });
         }
 
-        // Routen beim Laden der Seite anzeigen
-        loadRoutes();
+        // Route auswählen und "Jetzt fahren"-Button anzeigen
+        function selectRoute(index) {
+            const route = routes[index];
+            document.getElementById('start-ride').style.display = 'inline-block';
+            document.getElementById('start-ride').onclick = () => startRoute(route);
+        }
+
+        // Route erstellen
+        document.getElementById('create-button').addEventListener('click', () => {
+            const name = document.getElementById('route-name').value;
+            const stops = document.getElementById('route-stops').value.split(',');
+
+            const newRoute = { name, stops };
+            routes.push(newRoute);
+            saveRoutes();
+            displayRoutes();
+        });
+
+        // Routen speichern
+        function saveRoutes() {
+            fetch(routesJsonPath, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(routes)
+            });
+        }
+
+        // "Jetzt fahren"-Button gedrückt
+        function startRoute(route) {
+            // Route an die Handy-Seite weitergeben (hier kannst du eine API-Anfrage an die Handy-Seite stellen)
+            console.log('Route starten:', route);
+            fetch('https://api.github.com/repos/MGETZ-io/bus21-2/contents/currentRoute.json', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Aktuelle Route gestartet',
+                    content: btoa(JSON.stringify(route)) // Base64-encode die Route
+                })
+            });
+        }
     </script>
 </body>
 </html>
