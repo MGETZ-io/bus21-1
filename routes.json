@@ -1,14 +1,10 @@
-{
-  "routes": [
+[
     {
-      "routeNumber": "1",
-      "routeName": "Linie 1",
-      "stops": ["Hauptbahnhof", "Musterstraße", "Zielstraße"]
+        "name": "Linie 1",
+        "stops": ["Hauptbahnhof", "Zentrum", "Parkplatz"]
     },
     {
-      "routeNumber": "2",
-      "routeName": "Linie 2",
-      "stops": ["Bahnhof Süd", "Musterallee", "Zielplatz"]
+        "name": "Linie 2",
+        "stops": ["Hauptbahnhof", "Industriepark", "Wohngebiet"]
     }
-  ]
-}
+]
