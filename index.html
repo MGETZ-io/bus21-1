@@ -3,83 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Route erstellen</title>
+    <title>Bus Routen - PC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1, h2 {
+            color: #4CAF50;
+        }
+
+        form {
+            margin: 20px 0;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #routesList {
+            margin-top: 20px;
+        }
+
+        .routeItem {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .routeItem:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Route erstellen</h1>
+    <h1>Erstelle eine Busroute</h1>
     <form id="routeForm">
-        <input type="text" id="routeName" placeholder="Linienname" required>
-        <input type="text" id="routeNumber" placeholder="Liniennummer" required>
-        <textarea id="stops" placeholder="Haltestellen, durch Kommas getrennt" required></textarea>
+        <label for="routeName">Linienname:</label>
+        <input type="text" id="routeName" required><br><br>
+
+        <label for="routeNumber">Liniennummer:</label>
+        <input type="text" id="routeNumber" required><br><br>
+
+        <label for="stops">Haltestellen (kommagetrennt):</label>
+        <input type="text" id="stops" required><br><br>
+
         <button type="submit">Route erstellen</button>
     </form>
 
-    <h2>Erstellte Routen</h2>
-    <ul id="routesList"></ul>
+    <h2>Erstellte Routen:</h2>
+    <div id="routesList"></div>
 
     <script>
-        const apiUrl = 'https://api.github.com/repos/your-username/your-repo/contents/routes.json';
-        const token = 'YOUR_GITHUB_PERSONAL_ACCESS_TOKEN';
+        const repoName = 'bus21-1'; // PC Repo Name
+        const token = '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'; // Dein GitHub PAT
+        const user = 'MGETZ-io'; // Dein GitHub Username
 
-        // Route erstellen
-        document.getElementById('routeForm').addEventListener('submit', function(event) {
+        const apiUrl = `https://api.github.com/repos/${user}/${repoName}/contents/routes.json`;
+
+        document.getElementById('routeForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
             const routeName = document.getElementById('routeName').value;
             const routeNumber = document.getElementById('routeNumber').value;
             const stops = document.getElementById('stops').value.split(',');
 
-            const newRoute = {
+            const routeData = {
                 name: routeName,
                 number: routeNumber,
                 stops: stops
             };
 
-            // API-Anfrage zum Speichern der Route
             fetch(apiUrl, {
-                method: 'PUT',
+                method: 'GET',
                 headers: {
                     'Authorization': `token ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: 'Neue Route erstellt',
-                    content: btoa(JSON.stringify(newRoute))
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Route erstellt:', data);
-                loadRoutes();
-            })
-            .catch(error => {
-                console.error('Fehler:', error);
-            });
-        });
-
-        // Routen laden
-        function loadRoutes() {
-            fetch(apiUrl, {
-                headers: {
-                    'Authorization': `token ${token}`
+                    'Accept': 'application/vnd.github.v3.raw'
                 }
             })
             .then(response => response.json())
             .then(data => {
-                const routes = JSON.parse(atob(data.content));
+                let routes = data.content ? JSON.parse(atob(data.content)) : [];
+
+                routes.push(routeData);
+
+                fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Route hinzufügen',
+                        committer: {
+                            name: 'MGETZ-io',
+                            email: 'deine-email@example.com'
+                        },
+                        content: btoa(JSON.stringify(routes))
+                    })
+                })
+                .then(() => {
+                    alert('Route erfolgreich erstellt!');
+                    loadRoutes();
+                })
+                .catch(error => console.error('Fehler beim Speichern der Route:', error));
+            });
+        });
+
+        function loadRoutes() {
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3.raw'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let routes = data.content ? JSON.parse(atob(data.content)) : [];
                 const routesList = document.getElementById('routesList');
                 routesList.innerHTML = '';
+
                 routes.forEach(route => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${route.number} - ${route.name}`;
-                    routesList.appendChild(listItem);
+                    const routeItem = document.createElement('div');
+                    routeItem.classList.add('routeItem');
+                    routeItem.innerHTML = `
+                        <strong>Linie ${route.number} - ${route.name}</strong>
+                        <p>Haltestellen: ${route.stops.join(', ')}</p>
+                    `;
+                    routesList.appendChild(routeItem);
                 });
             })
-            .catch(error => {
-                console.error('Fehler:', error);
-            });
+            .catch(error => console.error('Fehler beim Laden der Routen:', error));
         }
 
+        // Routen beim Laden der Seite anzeigen
         loadRoutes();
     </script>
 </body>
