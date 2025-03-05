@@ -5,71 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bus Simulator 21 - Liniennetz</title>
     <style>
-        .highlight {
-            background-color: yellow;
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #2C2C2C;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            background-color: #1E1E1E;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            color: #FFCC00;
+            font-size: 2rem;
+        }
+        .form-container {
+            background-color: #3D3D3D;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            margin-top: 20px;
+        }
+        .form-container input {
+            background-color: #555;
+            color: white;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            width: 100%;
+            border-radius: 5px;
+        }
+        .form-container button {
+            background-color: #FFCC00;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #E6B800;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 80%;
+            margin-top: 30px;
+        }
+        li {
+            background-color: #555;
+            padding: 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        li.highlight {
+            background-color: #FFCC00;
+            color: black;
+        }
+        #currentStop {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Liniennetz im Bus Simulator 21</h1>
 
-    <form id="lineForm">
+    <header>
+        <h1>Liniennetz im Bus Simulator 21</h1>
+    </header>
+
+    <div class="form-container">
         <label for="lineName">Linienname:</label>
-        <input type="text" id="lineName" required><br>
+        <input type="text" id="lineName" placeholder="Gib den Namen der Linie ein" required>
 
         <label for="stops">Haltestellen (mit Komma trennen):</label>
-        <input type="text" id="stops" required><br>
+        <input type="text" id="stops" placeholder="Gib die Haltestellen ein" required>
 
-        <button type="submit">Linie hinzufügen</button>
-    </form>
+        <button type="submit" id="addLineBtn">Linie hinzufügen</button>
+    </div>
 
-    <h2>Haltestellen:</h2>
     <ul id="stopsList">
         <!-- Haltestellen werden hier angezeigt -->
     </ul>
 
+    <div id="currentStop">Aktueller Halt: Noch keine Haltestelle ausgewählt</div>
+
+    <button id="nextStopBtn">Nächster Halt</button>
+
     <script>
-        const lineForm = document.getElementById('lineForm');
+        const addLineBtn = document.getElementById('addLineBtn');
         const stopsList = document.getElementById('stopsList');
+        const currentStopDisplay = document.getElementById('currentStop');
+        const nextStopBtn = document.getElementById('nextStopBtn');
+
         let stops = [];
         let currentStopIndex = 0;
 
-        // Wenn die Linie hinzugefügt wird
-        lineForm.addEventListener('submit', function(event) {
-            event.preventDefault();
+        // Wenn der Button gedrückt wird, die Linie und Haltestellen hinzufügen
+        addLineBtn.addEventListener('click', function() {
             const lineName = document.getElementById('lineName').value;
             const stopsInput = document.getElementById('stops').value;
 
-            // Haltestellen in ein Array umwandeln
-            stops = stopsInput.split(',').map(stop => stop.trim());
-
-            // Liste der Haltestellen anzeigen
-            updateStopsList();
+            if (lineName && stopsInput) {
+                stops = stopsInput.split(',').map(stop => stop.trim());
+                updateStopList();
+                currentStopIndex = 0; // Setzt den Startstopp auf 0
+                updateCurrentStop();
+            }
         });
 
-        // Haltestellen aktualisieren
-        function updateStopsList() {
+        // Update der angezeigten Haltestellenliste
+        function updateStopList() {
             stopsList.innerHTML = '';
             stops.forEach((stop, index) => {
                 const li = document.createElement('li');
                 li.textContent = stop;
                 if (index === currentStopIndex) {
-                    li.classList.add('highlight'); // Aktuelle Haltestelle hervorheben
+                    li.classList.add('highlight');
                 }
                 stopsList.appendChild(li);
             });
         }
 
-        // Nächste Haltestelle setzen
-        function goToNextStop() {
-            if (currentStopIndex < stops.length - 1) {
-                currentStopIndex++;
-                updateStopsList();
-            }
+        // Update der aktuellen Haltestelle
+        function updateCurrentStop() {
+            currentStopDisplay.textContent = `Aktueller Halt: ${stops[currentStopIndex]}`;
+            updateStopList();
         }
 
-        // Funktion zum Wechseln zur nächsten Haltestelle
-        window.goToNextStop = goToNextStop;
+        // Nächster Halt Button
+        nextStopBtn.addEventListener('click', function() {
+            if (currentStopIndex < stops.length - 1) {
+                currentStopIndex++;
+                updateCurrentStop();
+                playAnnouncement(stops[currentStopIndex]);
+            }
+        });
+
+        // Funktion zum Abspielen der Ansage
+        function playAnnouncement(stop) {
+            const audio = new Audio(`sounds/${stop.toLowerCase().replace(/\s/g, '_')}.mp3`);
+            audio.play();
+        }
     </script>
 </body>
 </html>
