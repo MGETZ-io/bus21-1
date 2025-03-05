@@ -3,12 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bus 21 - Aktuelle Haltestelle</title>
-    <script src="stops.js" defer></script>
-    <link rel="stylesheet" href="style.css">
+    <title>Route erstellen</title>
 </head>
 <body>
-    <div id="currentStop">Aktueller Halt wird geladen...</div>
-    <div id="stopList"></div>
+    <h1>Route erstellen</h1>
+    <form id="routeForm">
+        <input type="text" id="routeName" placeholder="Linienname" required>
+        <input type="text" id="routeNumber" placeholder="Liniennummer" required>
+        <textarea id="stops" placeholder="Haltestellen, durch Kommas getrennt" required></textarea>
+        <button type="submit">Route erstellen</button>
+    </form>
+
+    <h2>Erstellte Routen</h2>
+    <ul id="routesList"></ul>
+
+    <script>
+        const apiUrl = 'https://api.github.com/repos/your-username/your-repo/contents/routes.json';
+        const token = 'YOUR_GITHUB_PERSONAL_ACCESS_TOKEN';
+
+        // Route erstellen
+        document.getElementById('routeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const routeName = document.getElementById('routeName').value;
+            const routeNumber = document.getElementById('routeNumber').value;
+            const stops = document.getElementById('stops').value.split(',');
+
+            const newRoute = {
+                name: routeName,
+                number: routeNumber,
+                stops: stops
+            };
+
+            // API-Anfrage zum Speichern der Route
+            fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Neue Route erstellt',
+                    content: btoa(JSON.stringify(newRoute))
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Route erstellt:', data);
+                loadRoutes();
+            })
+            .catch(error => {
+                console.error('Fehler:', error);
+            });
+        });
+
+        // Routen laden
+        function loadRoutes() {
+            fetch(apiUrl, {
+                headers: {
+                    'Authorization': `token ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const routes = JSON.parse(atob(data.content));
+                const routesList = document.getElementById('routesList');
+                routesList.innerHTML = '';
+                routes.forEach(route => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${route.number} - ${route.name}`;
+                    routesList.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                console.error('Fehler:', error);
+            });
+        }
+
+        loadRoutes();
+    </script>
 </body>
 </html>
