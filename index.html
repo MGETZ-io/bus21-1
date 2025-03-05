@@ -4,8 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Routen erstellen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        #create-route {
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        #route-ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #route-ul li {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e3e3e3;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #route-ul li:hover {
+            background-color: #c8e6c9;
+        }
+        #start-ride {
+            display: none;
+            padding: 10px;
+            background-color: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start-ride:hover {
+            background-color: #FF5722;
+        }
+    </style>
 </head>
 <body>
+
     <h1>Routen erstellen und auswählen</h1>
 
     <div id="route-list">
@@ -26,10 +70,9 @@
         <button id="create-button">Route erstellen</button>
     </div>
 
-    <button id="start-ride" style="display: none;">Jetzt fahren</button>
+    <button id="start-ride">Jetzt fahren</button>
 
     <script>
-        // JSON-Datei, die die Routen speichert
         const routesJsonPath = 'routes.json';
         let routes = [];
 
@@ -85,8 +128,7 @@
 
         // "Jetzt fahren"-Button gedrückt
         function startRoute(route) {
-            // Route an die Handy-Seite weitergeben (hier kannst du eine API-Anfrage an die Handy-Seite stellen)
-            console.log('Route starten:', route);
+            // Route an die Handy-Seite weitergeben
             fetch('https://api.github.com/repos/MGETZ-io/bus21-2/contents/currentRoute.json', {
                 method: 'PUT',
                 headers: {
