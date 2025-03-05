@@ -3,144 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Routen erstellen</title>
+    <title>Bus-Management</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        h1 {
-            text-align: center;
-            color: #4CAF50;
-        }
-        #create-route {
-            margin: 20px 0;
+        .route {
+            margin: 10px;
             padding: 10px;
-            border: 2px solid #4CAF50;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            display: inline-block;
+            width: 30%;
         }
-        #route-ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        #route-ul li {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #e3e3e3;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        #route-ul li:hover {
-            background-color: #c8e6c9;
-        }
-        #start-ride {
-            display: none;
-            padding: 10px;
-            background-color: #FF9800;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #start-ride:hover {
-            background-color: #FF5722;
+        .highlight {
+            background-color: yellow;
         }
     </style>
 </head>
 <body>
 
-    <h1>Routen erstellen und auswählen</h1>
+<h1>Routenübersicht</h1>
 
-    <div id="route-list">
-        <h2>Erstellte Routen</h2>
-        <ul id="route-ul">
-            <!-- Dynamisch generierte Routen werden hier eingefügt -->
-        </ul>
-    </div>
+<div id="routeList"></div>
 
-    <div id="create-route">
-        <h2>Neue Route erstellen</h2>
-        <label for="route-name">Routenname:</label>
-        <input type="text" id="route-name" placeholder="Routenname" required>
-        <br>
-        <label for="route-stops">Haltestellen (Komma getrennt):</label>
-        <input type="text" id="route-stops" placeholder="Haltestellen" required>
-        <br>
-        <button id="create-button">Route erstellen</button>
-    </div>
+<button onclick="startRoute()">Jetzt fahren</button>
 
-    <button id="start-ride">Jetzt fahren</button>
+<script>
+    const githubToken = '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'; // GitHub Token
+    const repoName = 'bus21-1'; // Dein Repo für die PC-Seite
 
-    <script>
-        const routesJsonPath = 'routes.json';
-        let routes = [];
-
-        // Lade die gespeicherten Routen
-        fetch(routesJsonPath)
-            .then(response => response.json())
-            .then(data => {
-                routes = data;
-                displayRoutes();
-            });
-
-        // Routen anzeigen
-        function displayRoutes() {
-            const routeUl = document.getElementById('route-ul');
-            routeUl.innerHTML = '';
-
-            routes.forEach((route, index) => {
-                const li = document.createElement('li');
-                li.textContent = `${route.name} - Haltestellen: ${route.stops.join(', ')}`;
-                li.addEventListener('click', () => selectRoute(index));
-                routeUl.appendChild(li);
-            });
+    let routes = [
+        {
+            name: "Route 1",
+            stops: ["Hauptbahnhof", "Haltestelle 2", "Haltestelle 3", "Haltestelle 4"]
+        },
+        {
+            name: "Route 2",
+            stops: ["Hauptbahnhof", "Haltestelle A", "Haltestelle B"]
         }
+    ];
 
-        // Route auswählen und "Jetzt fahren"-Button anzeigen
-        function selectRoute(index) {
-            const route = routes[index];
-            document.getElementById('start-ride').style.display = 'inline-block';
-            document.getElementById('start-ride').onclick = () => startRoute(route);
-        }
-
-        // Route erstellen
-        document.getElementById('create-button').addEventListener('click', () => {
-            const name = document.getElementById('route-name').value;
-            const stops = document.getElementById('route-stops').value.split(',');
-
-            const newRoute = { name, stops };
-            routes.push(newRoute);
-            saveRoutes();
-            displayRoutes();
+    // Routen auf der PC-Seite anzeigen
+    function loadRoutes() {
+        const routeList = document.getElementById('routeList');
+        routeList.innerHTML = '';
+        routes.forEach(route => {
+            const routeDiv = document.createElement('div');
+            routeDiv.classList.add('route');
+            routeDiv.innerHTML = `
+                <h3>${route.name}</h3>
+                <ul>
+                    ${route.stops.map(stop => `<li>${stop}</li>`).join('')}
+                </ul>
+                <button onclick="selectRoute('${route.name}')">Fahre diese Route</button>
+            `;
+            routeList.appendChild(routeDiv);
         });
+    }
 
-        // Routen speichern
-        function saveRoutes() {
-            fetch(routesJsonPath, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(routes)
-            });
-        }
+    // Route starten und zur Handy-Seite senden
+    function startRoute() {
+        const currentRoute = {
+            name: "Route 1",
+            stops: ["Hauptbahnhof", "Haltestelle 2", "Haltestelle 3", "Haltestelle 4"]
+        };
 
-        // "Jetzt fahren"-Button gedrückt
-        function startRoute(route) {
-            // Route an die Handy-Seite weitergeben
-            fetch('https://api.github.com/repos/MGETZ-io/bus21-2/contents/currentRoute.json', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer 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',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: 'Aktuelle Route gestartet',
-                    content: btoa(JSON.stringify(route)) // Base64-encode die Route
-                })
-            });
-        }
-    </script>
+        fetch(`https://api.github.com/repos/MGETZ-io/bus21-1/contents/currentRoute.json`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: 'Aktualisiere aktuelle Route',
+                content: btoa(JSON.stringify(currentRoute)),
+                path: 'currentRoute.json'
+            })
+        }).then(response => response.json())
+          .then(data => {
+              console.log('Route gestartet:', data);
+          })
+          .catch(error => console.error('Error:', error));
+    }
+
+    // Startseite laden
+    loadRoutes();
+</script>
+
 </body>
 </html>
